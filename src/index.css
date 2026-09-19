@@ -1,0 +1,138 @@
+/* Typography */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  /* Colors - Photography focused palette */
+  --color-near-black: #0a0a0a;
+  --color-charcoal: #1a1a1a;
+  --color-charcoal-light: #2a2a2a;
+  --color-warm-white: #f8f8f8;
+  --color-muted-gray: #888888;
+  --color-muted-gray-dark: #666666;
+
+  /* Typography */
+  --font-display: "Cormorant", serif;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing for editorial layouts */
+  --space-editorial: 8vw;
+  --space-tight: 2rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-near-black);
+  color: var(--color-warm-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom cursor support */
+body.custom-cursor {
+  cursor: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Typography classes */
+.display-large {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(3rem, 8vw, 8rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.display-medium {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 5rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.display-small {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw, 3rem);
+  line-height: 1.2;
+}
+
+.body-large {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.body-regular {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.metadata {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(0.75rem, 1vw, 0.875rem);
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Utility classes */
+.editorial-padding {
+  padding-inline: var(--space-editorial);
+}
+
+.editorial-margin {
+  margin-inline: var(--space-editorial);
+}
+
+/* Image utilities */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-warm-white);
+  outline-offset: 4px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-warm-white);
+  color: var(--color-near-black);
+}
+
+body.ws-open nav {
+  opacity: 0;
+  pointer-events: none;
+}
