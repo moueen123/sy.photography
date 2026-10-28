@@ -231,7 +231,18 @@ const albums = [
     mediaType: "video",
     imageCount: 2,
     photos: [],
-    videos: [],
+    videos: [
+      {
+        src: "https://github.com/moueen123/sy.photography/releases/download/collection-videos-v1/6-1.mp4",
+        poster: poster6_1,
+        title: "Couple Songs 1",
+      },
+      {
+        src: "https://github.com/moueen123/sy.photography/releases/download/collection-videos-v1/6-2.mp4",
+        poster: poster6_2,
+        title: "Couple Songs 2",
+      },
+    ],
   },
   {
     id: 7,
@@ -240,7 +251,13 @@ const albums = [
     mediaType: "video",
     imageCount: 1,
     photos: [],
-    videos: [],
+    videos: [
+      {
+        src: "https://github.com/moueen123/sy.photography/releases/download/collection-videos-v1/7-1.mp4",
+        poster: poster7_1,
+        title: "Songs & Music Videos 1",
+      },
+    ],
   },
 ];
 
