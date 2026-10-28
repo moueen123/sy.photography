@@ -427,6 +427,8 @@ const HeroSequence = () => {
 
   const scrollTriggerRef = useRef(null);
   const currentFrameRef = useRef(null);
+  const frameProgressRef = useRef(0);
+  const updateFrameRef = useRef(null);
   const heroCompleteRef = useRef(false);
   const resizeTimeoutRef = useRef(null);
 
@@ -505,13 +507,14 @@ const HeroSequence = () => {
 
   const {
     loadingProgress,
-    isLoaded,
+    isReady,
+    framesRevision,
     getFrame,
     getFrameIndexFromProgress,
   } = useFrameSequence({
     frameCount: FRAME_COUNT,
     framePathTemplate:
-      "/hero/frames/frame.{index}.jpeg",
+      "/hero/frames/frame.{index}.webp",
     startFrame: 1,
     paddingLength: 3,
   });
@@ -521,7 +524,7 @@ const HeroSequence = () => {
   // -----------------------------------------------------------------------
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isReady) return;
 
     const loader = loaderRef.current;
 
@@ -530,15 +533,7 @@ const HeroSequence = () => {
       return;
     }
 
-    // Make absolutely sure the progress reaches 100%.
-    gsap.set(
-      loaderProgressRef.current,
-      {
-        width: "100%",
-      },
-    );
-
-    // Give the user a short moment to actually see "100%".
+    // The first frame is ready; the rest of the sequence continues loading.
     const timer = setTimeout(() => {
       gsap.to(loader, {
         opacity: 0,
@@ -554,7 +549,7 @@ const HeroSequence = () => {
 
     return () => clearTimeout(timer);
   }, [
-    isLoaded,
+    isReady,
     prefersReducedMotion,
   ]);
 
@@ -563,6 +558,7 @@ const HeroSequence = () => {
   // -----------------------------------------------------------------------
 
   const updateFrame = (progress) => {
+    frameProgressRef.current = progress;
     const frameIndex =
       getFrameIndexFromProgress(progress);
 
@@ -577,6 +573,14 @@ const HeroSequence = () => {
       setCurrentFrame(frame);
     }
   };
+
+  updateFrameRef.current = updateFrame;
+
+  useEffect(() => {
+    if (isReady) {
+      updateFrameRef.current?.(frameProgressRef.current);
+    }
+  }, [framesRevision, isReady]);
 
   // -----------------------------------------------------------------------
   // CARD POSITIONING
@@ -925,7 +929,7 @@ const HeroSequence = () => {
 
   useGSAP(() => {
     if (
-      !isLoaded ||
+      !isReady ||
       prefersReducedMotion
     ) {
       return;
@@ -1173,7 +1177,7 @@ const HeroSequence = () => {
       }
     };
   }, [
-    isLoaded,
+    isReady,
     prefersReducedMotion,
   ]);
 
@@ -1182,7 +1186,7 @@ const HeroSequence = () => {
   // -----------------------------------------------------------------------
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isReady) return;
 
     const handleResize = () => {
       if (
@@ -1277,7 +1281,7 @@ const HeroSequence = () => {
         );
       }
     };
-  }, [isLoaded]);
+  }, [isReady]);
 
   // -----------------------------------------------------------------------
   // REDUCED MOTION
@@ -1286,7 +1290,7 @@ const HeroSequence = () => {
   useEffect(() => {
     if (
       prefersReducedMotion &&
-      isLoaded
+      isReady
     ) {
       const lastFrame =
         getFrame(FRAME_COUNT);
@@ -1373,7 +1377,7 @@ const HeroSequence = () => {
     }
   }, [
     prefersReducedMotion,
-    isLoaded,
+    isReady,
   ]);
 
   // -----------------------------------------------------------------------
@@ -1459,10 +1463,7 @@ const HeroSequence = () => {
                 </p>
 
                 <p className="text-lg sm:text-xl tracking-wide font-light">
-                  {loadingProgress >=
-                  100
-                    ? "READY"
-                    : "INITIALIZING"}
+                  {isReady ? "READY" : "INITIALIZING"}
                 </p>
               </div>
 
@@ -2061,7 +2062,7 @@ const HeroSequence = () => {
         )}
 
         {/* Scroll indicator */}
-        {isLoaded &&
+        {isReady &&
           !prefersReducedMotion &&
           !heroComplete && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-indicator" />
@@ -2094,3 +2095,4 @@ const HeroSequence = () => {
 };
 
 export default HeroSequence;
+
