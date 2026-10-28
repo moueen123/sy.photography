@@ -8,7 +8,9 @@ export const useFrameSequence = ({
   batchSize = 8,
 }) => {
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [framesRevision, setFramesRevision] = useState(0);
 
   const framesCache = useRef([]);
   const loadingInProgress = useRef(false);
@@ -51,20 +53,15 @@ export const useFrameSequence = ({
 
     loadingInProgress.current = true;
 
-    let loadedCount = 0;
+    let settledCount = 0;
 
-    // Load first frame
+    // Let the page start as soon as its first usable frame arrives.
     const firstFrameLoaded = await loadFrame(startFrame);
-
-    loadedCount++;
-
+    let ready = firstFrameLoaded;
+    settledCount++;
+    if (ready) setIsReady(true);
     setLoadingProgress(
-      Math.round((loadedCount / frameCount) * 100)
-    );
-
-    console.log(
-      'FIRST FRAME FINISHED',
-      firstFrameLoaded
+      Math.max(1, Math.round((settledCount / frameCount) * 100))
     );
 
     // Load remaining frames in batches
@@ -73,8 +70,6 @@ export const useFrameSequence = ({
       batchStart < startFrame + frameCount;
       batchStart += batchSize
     ) {
-      console.log('LOADING BATCH', batchStart);
-
       const batchEnd = Math.min(
         batchStart + batchSize,
         startFrame + frameCount
@@ -92,23 +87,26 @@ export const useFrameSequence = ({
 
       const results = await Promise.all(batch);
 
-      loadedCount += results.length;
+      settledCount += results.length;
+      setFramesRevision((revision) => revision + 1);
+
+      if (!ready && results.some(Boolean)) {
+        ready = true;
+        setIsReady(true);
+      }
 
       setLoadingProgress(
         Math.min(
           100,
-          Math.round(
-            (loadedCount / frameCount) * 100
-          )
+          Math.round((settledCount / frameCount) * 100)
         )
       );
     }
 
     setLoadingProgress(100);
+    setIsReady(true);
     setIsLoaded(true);
     loadingInProgress.current = false;
-
-    console.log('ALL FRAMES LOADED');
   };
 
   const getFrame = (index) => {
@@ -120,10 +118,33 @@ export const useFrameSequence = ({
       )
     );
 
-    return (
-      framesCache.current[frameIndex] ||
-      framesCache.current[startFrame]
-    );
+    if (framesCache.current[frameIndex]) {
+      return framesCache.current[frameIndex];
+    }
+
+    // While later frames are downloading, use the closest earlier frame.
+    for (
+      let fallbackIndex = frameIndex - 1;
+      fallbackIndex >= startFrame;
+      fallbackIndex--
+    ) {
+      if (framesCache.current[fallbackIndex]) {
+        return framesCache.current[fallbackIndex];
+      }
+    }
+
+    // The first image can fail independently; fall forward to any loaded frame.
+    for (
+      let fallbackIndex = startFrame + 1;
+      fallbackIndex < startFrame + frameCount;
+      fallbackIndex++
+    ) {
+      if (framesCache.current[fallbackIndex]) {
+        return framesCache.current[fallbackIndex];
+      }
+    }
+
+    return undefined;
   };
 
   const getFrameIndexFromProgress = (progress) => {
@@ -157,9 +178,12 @@ export const useFrameSequence = ({
 
   return {
     loadingProgress,
+    isReady,
     isLoaded,
+    framesRevision,
     getFrame,
     getFrameIndexFromProgress,
     frameCount,
   };
 };
+
