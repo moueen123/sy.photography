@@ -508,6 +508,7 @@ const HeroSequence = () => {
   const {
     loadingProgress,
     isReady,
+    isLoaded,
     framesRevision,
     getFrame,
     getFrameIndexFromProgress,
@@ -524,7 +525,7 @@ const HeroSequence = () => {
   // -----------------------------------------------------------------------
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isLoaded) return;
 
     const loader = loaderRef.current;
 
@@ -533,23 +534,37 @@ const HeroSequence = () => {
       return;
     }
 
-    // The first frame is ready; the rest of the sequence continues loading.
-    const timer = setTimeout(() => {
-      gsap.to(loader, {
-        opacity: 0,
-        duration: prefersReducedMotion
-          ? 0
-          : 1,
-        ease: "power2.inOut",
-        onComplete: () => {
-          setLoaderVisible(false);
-        },
-      });
-    }, prefersReducedMotion ? 0 : 500);
+    let timer;
+    let fadeTween;
 
-    return () => clearTimeout(timer);
+    const finishLoading = () => {
+      timer = setTimeout(() => {
+        fadeTween = gsap.to(loader, {
+          opacity: 0,
+          duration: prefersReducedMotion
+            ? 0
+            : 1,
+          ease: "power2.inOut",
+          onComplete: () => {
+            setLoaderVisible(false);
+          },
+        });
+      }, prefersReducedMotion ? 0 : 500);
+    };
+
+    if (document.readyState === "complete") {
+      finishLoading();
+    } else {
+      window.addEventListener("load", finishLoading, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener("load", finishLoading);
+      clearTimeout(timer);
+      fadeTween?.kill();
+    };
   }, [
-    isReady,
+    isLoaded,
     prefersReducedMotion,
   ]);
 
@@ -1463,7 +1478,11 @@ const HeroSequence = () => {
                 </p>
 
                 <p className="text-lg sm:text-xl tracking-wide font-light">
-                  {isReady ? "READY" : "INITIALIZING"}
+                  {isLoaded
+                    ? "READY"
+                    : isReady
+                      ? "LOADING"
+                      : "INITIALIZING"}
                 </p>
               </div>
 
